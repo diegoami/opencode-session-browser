@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenCode Session Browser</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header id="top">
+  <a class="brand" href="#/">OpenCode Session Browser</a>
+  <nav><a href="#/" id="nav-sessions">Sessions</a><a href="#/sources" id="nav-sources">Sources</a></nav>
+  <form id="searchform" autocomplete="off"><input id="q" type="search" placeholder="Search everything: titles, ids, paths, messages, tools, errors…  (&quot;quote phrases&quot;)"></form>
+  <span id="indexstate" class="muted"></span>
+  <button id="refresh" title="Re-read all sources now">⟳</button>
+</header>
+<main id="app"></main>
+<div id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.cache/
+# never commit OpenCode data or exports
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+/exports/
+/local/
+config.local.json
+.env
