@@ -88,6 +88,7 @@ function renderListShell() {
 const COLS = [["updated", "Updated"], ["created", "Created"], ["source", "Source"], ["project", "Project"], ["title", "Title / ID"], [null, "Model"], ["messages", "Msgs"], [null, "Children"], [null, "Status"], ["errors", "Err"]];
 async function loadList(more) {
   if (state.view !== "list") return;
+  if (!state.sources) { try { state.sources = (await api("/api/sources")).sources; } catch { /* retry on next load */ } }
   const p = params(); if (more) p.set("offset", state.rows.length);
   let d; try { d = await api("/api/sessions?" + p); } catch (e) { app.innerHTML = `<div class="errbox">${esc(e.message)}</div>`; return; }
   state.rows = more ? state.rows.concat(d.rows) : d.rows; state.total = d.total; state.facets = d.facets; state.version = d.version; state.indexing = d.indexing;
