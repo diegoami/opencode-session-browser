@@ -70,13 +70,46 @@ def list_wsl_distros(timeout: float = 10.0) -> tuple[list[Distro], str | None]:
 
 
 def _roots_under_home(home: Path) -> list[str]:
-    return [str(c) for c in (home / ".local" / "share" / "opencode",) if has_data(c)]
+    out = [str(c) for c in (home / ".local" / "share" / "opencode",) if has_data(c)]
+    out += [str(c) for c in sibling_roots(home, (".local/share/*/opencode",)) if str(c) not in out]
+    return out
 
 
 def _windows_profile_candidates(profile: Path) -> list[str]:
     cands = [profile / ".local" / "share" / "opencode", profile / "AppData" / "Local" / "opencode",
              profile / "AppData" / "Roaming" / "opencode"]
     return [str(c) for c in cands if has_data(c)]
+
+
+def sibling_roots(base: Path, depth_patterns: tuple[str, ...]) -> list[Path]:
+    """Roots created by tools that run OpenCode with their own XDG_DATA_HOME, e.g.
+    ``~/.local/share/<tool>/opencode`` or ``%LOCALAPPDATA%/<tool>/data/opencode``. Shallow globs only."""
+    out = []
+    for pat in depth_patterns:
+        try:
+            for c in sorted(base.glob(pat)):
+                if has_data(c):
+                    out.append(c)
+        except OSError:
+            continue
+    return out
+
+
+EXTRA_PATTERNS_PROFILE = (".local/share/*/opencode", "AppData/Local/*/opencode", "AppData/Local/*/data/opencode",
+                          "AppData/Roaming/*/opencode")
+
+
+def extra_specs(profile: Path, existing: set[str], env: str, label_prefix: str, id_prefix: str) -> list[SourceSpec]:
+    out = []
+    for r in sibling_roots(profile, EXTRA_PATTERNS_PROFILE):
+        key = os.path.normcase(str(r))
+        if key in existing:
+            continue
+        existing.add(key)
+        owner = r.parent.parent.name if r.parent.name == "data" else r.parent.name
+        out.append(SourceSpec(id=f"{id_prefix}-{slug(owner)}", label=f"{label_prefix}: {owner}", env=env, root=str(r),
+                              note="custom data root (a tool running OpenCode with its own XDG_DATA_HOME)"))
+    return out
 
 
 def discover_native_windows() -> list[SourceSpec]:
@@ -96,17 +129,27 @@ def discover_native_windows() -> list[SourceSpec]:
             seen.add(k)
             out.append(SourceSpec(id="windows" if not out else f"windows-{len(out)+1}", label="Windows" if not out else f"Windows ({c})",
                                   env="windows", root=str(c)))
+    out += extra_specs(home, {os.path.normcase(s.root) for s in out}, "windows", "Windows", "windows")
     return out
 
 
 def discover_native_posix() -> list[SourceSpec]:
     base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "opencode"
-    if not has_data(base):
-        return []
-    if is_wsl():
-        d = wsl_distro_name() or "WSL"
-        return [SourceSpec(id=f"wsl-{slug(d)}", label=f"WSL: {d}", env="wsl", root=str(base), distro=d)]
-    return [SourceSpec(id="linux", label="Linux", env="linux", root=str(base))]
+    wsl, d = is_wsl(), (wsl_distro_name() or "WSL")
+    out: list[SourceSpec] = []
+    seen: set[str] = set()
+    if has_data(base):
+        seen.add(str(base))
+        out.append(SourceSpec(id=f"wsl-{slug(d)}", label=f"WSL: {d}", env="wsl", root=str(base), distro=d) if wsl
+                   else SourceSpec(id="linux", label="Linux", env="linux", root=str(base)))
+    for r in sibling_roots(Path.home(), (".local/share/*/opencode",)):
+        if str(r) in seen:
+            continue
+        owner = r.parent.name
+        out.append(SourceSpec(id=f"{'wsl-' + slug(d) if wsl else 'linux'}-{slug(owner)}", label=f"{'WSL: ' + d if wsl else 'Linux'}: {owner}",
+                              env="wsl" if wsl else "linux", root=str(r), distro=d if wsl else None,
+                              note="custom data root (a tool running OpenCode with its own XDG_DATA_HOME)"))
+    return out
 
 
 def discover_windows_from_wsl() -> list[SourceSpec]:
@@ -121,13 +164,22 @@ def discover_windows_from_wsl() -> list[SourceSpec]:
             for r in _windows_profile_candidates(u):
                 found.append((u.name, r))
     out = []
+    seen = {os.path.normcase(r) for _, r in found}
+    extras = []
+    for drive in sorted(Path("/mnt").glob("[a-z]")):
+        try:
+            for u in (drive / "Users").iterdir():
+                if u.is_dir() and u.name.lower() not in SKIP_USERS:
+                    extras += extra_specs(u, seen, "windows", "Windows", "windows")
+        except OSError:
+            continue
     for i, (user, root) in enumerate(found):
         multi = len({u for u, _ in found}) > 1 or sum(1 for u, _ in found if u == user) > 1
         label = "Windows" + (f" ({user})" if multi else "")
         sid = "windows" + (f"-{slug(user)}" if multi else "") + (f"-{i+1}" if sum(1 for u, _ in found if u == user) > 1 else "")
         out.append(SourceSpec(id=sid, label=label, env="windows", root=root,
                               note="read through /mnt drive mount -> snapshot copy (WAL cannot be mapped over drvfs/9p)"))
-    return out
+    return out + extras
 
 
 def discover_wsl_from_windows(wake: bool) -> tuple[list[SourceSpec], list[Distro], str | None]:

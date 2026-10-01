@@ -128,3 +128,22 @@ def test_bad_config_is_a_clean_error(tmp_path):
 def test_snapshot_decision():
     from opencode_session_browser import sqlite_access as sa
     assert sa.needs_snapshot("/tmp") is None or isinstance(sa.needs_snapshot("/tmp"), str)
+
+
+def test_custom_xdg_data_roots_are_found(monkeypatch, tmp_path):
+    """Tools that run OpenCode with their own XDG_DATA_HOME leave stores next to the default one."""
+    home = tmp_path / "home"
+    for rel in (".local/share/opencode", ".local/share/harness-x/opencode", ".local/share/not-a-store/opencode"):
+        d = home / rel; d.mkdir(parents=True)
+        if "not-a-store" not in rel:
+            (d / "opencode.db").write_bytes(b"")
+    monkeypatch.setattr(discovery.Path, "home", classmethod(lambda cls: home))
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
+    specs = discovery.discover_native_posix()
+    assert sorted(s.root for s in specs) == sorted(str(home / r) for r in (".local/share/opencode", ".local/share/harness-x/opencode"))
+    assert any(s.label.endswith(": harness-x") for s in specs)
+    prof = tmp_path / "Users" / "Me"
+    (prof / "AppData/Local/review-tool/data/opencode").mkdir(parents=True)
+    (prof / "AppData/Local/review-tool/data/opencode/opencode.db").write_bytes(b"")
+    got = discovery.extra_specs(prof, set(), "windows", "Windows", "windows")
+    assert [s.label for s in got] == ["Windows: review-tool"]
