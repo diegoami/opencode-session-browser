@@ -37,7 +37,7 @@ cd ~/projects/opencode-session-browser
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e '.[dev]'
 pytest
-opencode-session-browser          # http://127.0.0.1:8765
+opencode-session-browser          # http://127.0.0.1:8780
 ```
 
 From WSL it discovers the WSL store, plus every Windows profile under `/mnt/<drive>/Users/*` that has OpenCode data.
@@ -159,6 +159,6 @@ The UI only consumes the normalised API, never a database schema. A new OpenCode
 * *`disk I/O error` / `database is locked` on a store:* expected for WAL over `/mnt/c` or UNC; the tool switches to snapshot mode by itself (shown under Sources → Access mode).
 * *First start is slow on Windows → WSL:* the first snapshot copies the database once; later refreshes copy only the WAL.
 * *A WSL distro shows "stopped":* start it, or drop `--no-wake-wsl`.
-* *Port in use:* `--port 8780`.
+* *Port in use:* `--port 8790` (default is 8780).
 * *Reset everything derived:* delete the cache directory shown on the Sources page.
 * *Run the real-machine check:* `python scripts/integration_check.py` (prints counts only).

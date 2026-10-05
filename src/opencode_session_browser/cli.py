@@ -18,7 +18,7 @@ def parse_args(argv):
     ap = argparse.ArgumentParser(prog="opencode-session-browser",
                                  description="Read-only browser for every OpenCode session on Windows and WSL.")
     ap.add_argument("--host", help="bind address (default 127.0.0.1)")
-    ap.add_argument("--port", type=int, help="port (default 8765)")
+    ap.add_argument("--port", type=int, help="port (default 8780)")
     ap.add_argument("--source", action="append", default=[], metavar="NAME=PATH",
                     help="extra OpenCode data root (dir containing opencode.db, a .db file, a storage/ tree, or an export dir)")
     ap.add_argument("--kind", action="append", default=[], metavar="NAME=KIND", help="force kind for a --source: auto|sqlite|files|export-dir")

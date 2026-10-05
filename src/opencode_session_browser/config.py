@@ -32,7 +32,7 @@ class Config:
     cache_dir: str | None = None
     opencode_cmd: str | None = None
     host: str = "127.0.0.1"
-    port: int = 8765
+    port: int = 8780
 
 
 def default_config_path() -> Path:
