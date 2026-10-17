@@ -1,0 +1,53 @@
+:root{--bg:#fff;--fg:#1d2330;--muted:#667085;--line:#e3e6ec;--panel:#f6f7f9;--accent:#2f5fd0;--user:#1f6f43;--says:#2f5fd0;--tool:#6b3fa0;--err:#b3261e;--ok:#1f6f43;--run:#a15c00}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--fg:#dde2ec;--muted:#8d97a8;--line:#2a303b;--panel:#1b1f27;--accent:#7aa2ff;--user:#6fcf97;--says:#7aa2ff;--tool:#c39bff;--err:#ff7b72;--ok:#6fcf97;--run:#f0b44c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+#add{flex:1;display:flex;gap:6px;min-width:280px}
+#ids{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);font:13px ui-monospace,Consolas,monospace}
+button,select{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:4px 10px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--accent)}
+.opt{color:var(--muted);font-size:13px;display:flex;gap:4px;align-items:center}
+main{padding:12px 16px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,640px),1fr))}
+.empty{color:var(--muted)}
+.card{border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-width:0;max-height:calc(100vh - 90px)}
+.card .hd{padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);border-radius:8px 8px 0 0}
+.card .title{font-weight:600;word-break:break-word}
+.card .meta{color:var(--muted);font-size:12.5px;word-break:break-all}
+.card .meta a{color:var(--accent);cursor:pointer}
+.card .bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.card .bar .sp{flex:1}
+.pill{font-size:11.5px;border-radius:10px;padding:0 8px;border:1px solid currentColor}
+.pill.run{color:var(--run)}.pill.idle{color:var(--muted)}.pill.ok{color:var(--ok)}.pill.bad{color:var(--err)}
+.feed{overflow:auto;padding:6px 12px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;flex:1;min-height:120px}
+.step{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:1px 0;cursor:pointer}
+.step .t{color:var(--muted)}
+.step .b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step.open .b{white-space:pre-wrap;word-break:break-word}
+.k{font-weight:600}
+.k-says{color:var(--says)}.k-user{color:var(--user)}.k-tool{color:var(--tool)}.k-error{color:var(--err)}.k-thinks,.k-system,.k-event,.k-file{color:var(--muted)}
+.st-running,.st-pending{color:var(--run)}.st-completed{color:var(--ok)}.st-error{color:var(--err)}
+.step.thinks .b{color:var(--muted);font-style:italic}
+.msg{color:var(--muted);padding:10px 12px}
+.msg.err{color:var(--err)}
+nav{display:flex;gap:0}
+nav button{border-radius:0}nav button:first-child{border-radius:5px 0 0 5px}nav button:last-child{border-radius:0 5px 5px 0}
+nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+[hidden]{display:none!important}
+#active{display:block}
+.arow{border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+.arow .ah{display:flex;gap:10px;align-items:center;padding:8px 12px;flex-wrap:wrap}
+.arow .ah .tt{flex:1;min-width:240px;word-break:break-word}
+.arow .ah .tt b{display:block}
+.arow .ah small{color:var(--muted)}
+.arow .card{border:0;border-top:1px solid var(--line);border-radius:0;max-height:60vh}
+.arow .card .hd{border-radius:0}
+nav{flex-direction:column}
+nav button,nav button:first-child,nav button:last-child{border-radius:5px;text-align:left}
+nav button+button{margin-top:-1px}
+.arow .dir{font-size:15px;font-weight:700;word-break:break-all}
+.arow .ah .tt b{font-weight:500;color:var(--fg)}
+.last{text-align:right;line-height:1.2;min-width:110px}
+.last .lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.last b{font-size:17px}.last .abs{display:block;font-size:12px;color:var(--muted)}
+.last.fresh b{color:var(--ok)}.last.recent b{color:var(--run)}.last.stale b{color:var(--muted)}

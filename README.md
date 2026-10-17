@@ -60,6 +60,15 @@ Python 3.11+ is required (3.14 tested). Later: `.\.venv\Scripts\opencode-session
 Options: `--port N`, `--host`, `--source NAME=PATH`, `--status-url SOURCE=URL`, `--no-auto`, `--no-windows`, `--no-wsl`,
 `--no-wake-wsl`, `--config FILE`, `--cache-dir DIR`, `--discover` (print sources + session counts as JSON and exit).
 
+## Session tracker
+
+`http://127.0.0.1:8780/track` is a separate page for following sessions by id, like `peek.sh`: enter one or more
+session ids (`ses_…`, a unique prefix of at least 8 characters, or a `source~id` key), and each one gets a live card with
+title · provider/model · directory, and its steps in order: what the user and model said, and each tool call with its
+status, duration and the start of its input (click a line to expand it). It polls every 3 s and only reloads a
+session when its messages changed. Sub-sessions (and `task` calls) link to cards of their own. The tracked ids are kept
+in the URL (`/track#ses_a,ses_b`), so a tracker can be bookmarked. API: `GET /api/track?id=<id>`.
+
 ## How discovery works
 
 1. **Persistent storage first.** Every data root containing `opencode*.db` (or a legacy `storage/session` tree) is a source. A database is
@@ -76,7 +85,7 @@ Where the roots come from (nothing is hard-coded — no user name, distro or hom
 | Launched from | Finds |
 |---|---|
 | Windows | `%XDG_DATA_HOME%\opencode`, `~\.local\share\opencode`, `%LOCALAPPDATA%\opencode`, `%APPDATA%\opencode`; every distro from `wsl.exe -l -v` (system distros skipped) via `\\wsl.localhost\<distro>\home\*` and `\root` → `.local/share/opencode` |
-| WSL | `$XDG_DATA_HOME/opencode` or `~/.local/share/opencode`; every `/mnt/<drive>/Users/*/{.local/share,AppData/Local,AppData/Roaming}/opencode`. Other distros are *not* reachable from WSL — launch from Windows (or add a manual source). |
+| WSL | `$XDG_DATA_HOME/opencode` or `~/.local/share/opencode`; every `/mnt/<drive>/Users/*/{.local/share,AppData/Local,AppData/Roaming}/opencode`; tool-specific stores at `~/.local/share/<tool>/opencode` and `~/.local/share/<tool>/data/opencode`. Other distros are *not* reachable from WSL — launch from Windows (or add a manual source). |
 | Linux/macOS | `~/.local/share/opencode` |
 
 Stopped WSL distros: reading their filesystem starts them (Windows behaviour). Pass `--no-wake-wsl` / `"wake_wsl": false` to leave them alone (they are then listed as stopped).

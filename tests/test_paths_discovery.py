@@ -133,15 +133,17 @@ def test_snapshot_decision():
 def test_custom_xdg_data_roots_are_found(monkeypatch, tmp_path):
     """Tools that run OpenCode with their own XDG_DATA_HOME leave stores next to the default one."""
     home = tmp_path / "home"
-    for rel in (".local/share/opencode", ".local/share/harness-x/opencode", ".local/share/not-a-store/opencode"):
+    for rel in (".local/share/opencode", ".local/share/harness-x/opencode", ".local/share/harness-y/data/opencode",
+                ".local/share/not-a-store/opencode"):
         d = home / rel; d.mkdir(parents=True)
         if "not-a-store" not in rel:
             (d / "opencode.db").write_bytes(b"")
     monkeypatch.setattr(discovery.Path, "home", classmethod(lambda cls: home))
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     specs = discovery.discover_native_posix()
-    assert sorted(s.root for s in specs) == sorted(str(home / r) for r in (".local/share/opencode", ".local/share/harness-x/opencode"))
-    assert any(s.label.endswith(": harness-x") for s in specs)
+    assert sorted(s.root for s in specs) == sorted(str(home / r) for r in (".local/share/opencode", ".local/share/harness-x/opencode",
+                                                                            ".local/share/harness-y/data/opencode"))
+    assert any(s.label.endswith(": harness-x") for s in specs) and any(s.label.endswith(": harness-y") for s in specs)
     prof = tmp_path / "Users" / "Me"
     (prof / "AppData/Local/review-tool/data/opencode").mkdir(parents=True)
     (prof / "AppData/Local/review-tool/data/opencode/opencode.db").write_bytes(b"")

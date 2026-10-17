@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import exporters
+from . import exporters, tracker
 from .registry import Registry
 
 STATIC = Path(__file__).parent / "static"
@@ -76,6 +76,14 @@ def make_handler(reg: Registry, allow_remote: bool, verbose: bool):
             q = {k: v[0] for k, v in parse_qs(u.query).items()}
             if path == "/api/sessions":
                 return self._json(reg.query(q))
+            if path == "/api/track":
+                return self._json(tracker.track(reg, q.get("id", ""), q.get("fp")))
+            if path == "/api/active":
+                try:
+                    mins = min(max(float(q.get("minutes", 10)), 1), 1440)
+                except ValueError:
+                    mins = 10
+                return self._json(tracker.active(reg, mins, hide_scratch=q.get("hide_scratch") == "1"))
             if path == "/api/sources":
                 return self._json(reg.diagnostics())
             if path == "/api/changes":
@@ -117,6 +125,8 @@ def make_handler(reg: Registry, allow_remote: bool, verbose: bool):
         def _static(self, path: str):
             if path in ("", "/"):
                 path = "/index.html"
+            if path == "/track":
+                path = "/track.html"
             f = (STATIC / path.lstrip("/")).resolve()
             if STATIC.resolve() not in f.parents or not f.is_file():
                 return self._send(404, b"not found", "text/plain")

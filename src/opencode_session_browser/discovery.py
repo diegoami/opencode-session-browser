@@ -71,7 +71,7 @@ def list_wsl_distros(timeout: float = 10.0) -> tuple[list[Distro], str | None]:
 
 def _roots_under_home(home: Path) -> list[str]:
     out = [str(c) for c in (home / ".local" / "share" / "opencode",) if has_data(c)]
-    out += [str(c) for c in sibling_roots(home, (".local/share/*/opencode",)) if str(c) not in out]
+    out += [str(c) for c in sibling_roots(home, POSIX_SIBLING_PATTERNS) if str(c) not in out]
     return out
 
 
@@ -95,7 +95,8 @@ def sibling_roots(base: Path, depth_patterns: tuple[str, ...]) -> list[Path]:
     return out
 
 
-EXTRA_PATTERNS_PROFILE = (".local/share/*/opencode", "AppData/Local/*/opencode", "AppData/Local/*/data/opencode",
+POSIX_SIBLING_PATTERNS = (".local/share/*/opencode", ".local/share/*/data/opencode")
+EXTRA_PATTERNS_PROFILE = (*POSIX_SIBLING_PATTERNS, "AppData/Local/*/opencode", "AppData/Local/*/data/opencode",
                           "AppData/Roaming/*/opencode")
 
 
@@ -142,10 +143,11 @@ def discover_native_posix() -> list[SourceSpec]:
         seen.add(str(base))
         out.append(SourceSpec(id=f"wsl-{slug(d)}", label=f"WSL: {d}", env="wsl", root=str(base), distro=d) if wsl
                    else SourceSpec(id="linux", label="Linux", env="linux", root=str(base)))
-    for r in sibling_roots(Path.home(), (".local/share/*/opencode",)):
+    for r in sibling_roots(Path.home(), POSIX_SIBLING_PATTERNS):
         if str(r) in seen:
             continue
-        owner = r.parent.name
+        seen.add(str(r))
+        owner = r.parent.parent.name if r.parent.name == "data" else r.parent.name
         out.append(SourceSpec(id=f"{'wsl-' + slug(d) if wsl else 'linux'}-{slug(owner)}", label=f"{'WSL: ' + d if wsl else 'Linux'}: {owner}",
                               env="wsl" if wsl else "linux", root=str(r), distro=d if wsl else None,
                               note="custom data root (a tool running OpenCode with its own XDG_DATA_HOME)"))
